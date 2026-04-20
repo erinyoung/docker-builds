@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 
-RUN wget -q https://github.com/amkozlov/raxml-ng/releases/download/2.0.0/raxml-ng_v2.0.0_linux_x86_64.zip && \
+RUN wget -q https://github.com/amkozlov/raxml-ng/releases/download/${RAXMLNG_VER}/raxml-ng_v${RAXMLNG_VER}_linux_x86_64.zip && \
     unzip raxml-ng_v${RAXMLNG_VER}_linux_x86_64.zip && \
     rm raxml-ng_v${RAXMLNG_VER}_linux_x86_64.zip && \
     mv ./raxml-ng /usr/local/bin/raxml-ng
