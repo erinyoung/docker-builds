@@ -71,6 +71,7 @@ RUN mkdir -p ${VADRINSTALLDIR}/vadr-${VADR_VERSION} /data ${VADRMODELDIR} && \
   echo "DONE DELETING VADR MODELS" && \
   cd / && \
   find /opt -type f -iname "*fa" -delete && \
+  rm -vrf /opt/vadr/minimap2/test/* /opt/vadr/vadr/testfiles/* /opt/vadr/vadr/documentation/* && \
   yes | cpan install Mozilla::CA
 
 # set working directory
