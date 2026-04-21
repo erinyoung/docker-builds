@@ -19,8 +19,19 @@ LABEL maintainer="Tom Iverson"
 LABEL maintainer.email="tiverson@utah.gov"
 
 # perl, python2, and r are required for the scripts
+## Use full openjdk-21-jdk
+# RUN apt-get update && apt-get install --no-install-recommends -y \
+#   openjdk-21-jdk \
+#   wget \
+#   ca-certificates \
+#   python3 \
+#   unzip \
+#   curl \
+#   && apt-get autoclean && rm -rf /var/lib/apt/lists/*
+
+## Use openjdk-21-jre-headless for a smaller image size.
 RUN apt-get update && apt-get install --no-install-recommends -y \
-  openjdk-21-jdk \
+  openjdk-21-jre-headless \
   wget \
   ca-certificates \
   python3 \
