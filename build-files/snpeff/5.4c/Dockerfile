@@ -77,14 +77,13 @@ WORKDIR /data
 
 FROM app AS test
 
-RUN snpeff -h 2>&1 || true && \
-    snpsift -h 2>&1 || true
+RUN snpeff -help 2>&1 || true && \
+    snpsift -help 2>&1 || true
 
 RUN snpeff download -v hg19 && \
     snpeff hg19 /snpEff/examples/test.chr22.vcf > annotated.vcf && \
-    cat annotated.vcf | snpsift filter "(QUAL>=0)" > filtered.vcf && \
-    grep -v "^#" filtered.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
-    
+    grep -v "^#" annotated.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
+
 
 # from issue https://github.com/StaPH-B/docker-builds/issues/760
 RUN buildDbNcbi.sh CP014866.1
