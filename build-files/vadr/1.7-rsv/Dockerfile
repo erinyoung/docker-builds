@@ -1,6 +1,6 @@
 ARG VADR_VERSION=1.7
 
-FROM staphb/vadr:$VADR_VERSION AS app
+FROM staphb/vadr:${VADR_VERSION}-slim AS app
 
 # for easy upgrade later. LC_ALL set for singularity compatibility
 ENV VADR_VERSION=${VADR_VERSION} \
