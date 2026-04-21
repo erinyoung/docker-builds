@@ -70,10 +70,19 @@ FROM app AS test
 # prints to stderr
 RUN snpEff -help || snpsift -help || true
 
-# getting test script from version 5.2a
-RUN wget https://raw.githubusercontent.com/StaPH-B/docker-builds/refs/heads/master/build-files/snpeff/5.2a/test_snpeff_snpsift.sh && \
-  bash test_snpeff_snpsift.sh && \
-  grep -v "^#"  filtered.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
+# # getting test script from version 5.2a
+# RUN wget https://raw.githubusercontent.com/StaPH-B/docker-builds/refs/heads/master/build-files/snpeff/5.2a/test_snpeff_snpsift.sh && \
+#   bash test_snpeff_snpsift.sh && \
+#   grep -v "^#"  filtered.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
+
+## Suggested new test file, because of Snpeff file structure update
+RUN snpeff -help 2>&1 || true && \
+    snpsift -help 2>&1 || true
+
+RUN snpeff download -v hg19 && \
+    snpeff hg19 /snpEff/examples/test.chr22.vcf > annotated.vcf && \
+    cat annotated.vcf | snpsift filter "(QUAL>=30)" > filtered.vcf && \
+    grep -v "^#" filtered.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
 
 # from issue https://github.com/StaPH-B/docker-builds/issues/760
 RUN buildDbNcbi.sh CP014866.1
