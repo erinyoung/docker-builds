@@ -77,8 +77,8 @@ WORKDIR /data
 
 FROM app AS test
 
-RUN snpeff -help 2>&1 || true && \
-    snpsift -help 2>&1 || true
+RUN snpeff -h 2>&1 || true && \
+    snpsift -h 2>&1 || true
 
 RUN snpeff download -v hg19 && \
     snpeff hg19 /snpEff/examples/test.chr22.vcf > annotated.vcf && \
