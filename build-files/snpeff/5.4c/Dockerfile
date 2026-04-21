@@ -68,7 +68,7 @@ WORKDIR /data
 FROM app AS test
 
 # prints to stderr
-RUN snpEff -help || snpsift -help || true
+# RUN snpEff -help || snpsift -help || true
 
 # # getting test script from version 5.2a
 # RUN wget https://raw.githubusercontent.com/StaPH-B/docker-builds/refs/heads/master/build-files/snpeff/5.2a/test_snpeff_snpsift.sh && \
