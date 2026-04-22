@@ -5,8 +5,8 @@ Main tool: [pyMLST](https://github.com/bvalot/pyMLST)
 Code repository: https://github.com/bvalot/pyMLST
 
 Additional tools:
-- MAFFT : v7.490
-- KMA : 1.3.28
+- MAFFT : v7.505 (2022/Apr/10)
+- KMA : 1.4.14
 - BLAT :  v.35
 
 Basic information on how to use this tool:
