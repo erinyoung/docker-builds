@@ -1,11 +1,10 @@
-FROM mambaorg/micromamba:2.5.0-ubuntu24.04 AS app
+FROM mambaorg/micromamba:2.5.0-ubuntu22.04 AS app
 
 ARG BAKTA_VER="1.12.0"
 ARG DIAMOND_VER="2.1.24"
 
-
 # 'LABEL' instructions tag the image with metadata that might be important to the user
-LABEL base.image="mambaorg/micromamba:2.5.0-ubuntu24.04"
+LABEL base.image="mambaorg/micromamba:2.5.0-ubuntu22.04"
 LABEL dockerfile.version="1"
 LABEL software="Bakta"
 LABEL software.version="${BAKTA_VER}"
@@ -17,8 +16,6 @@ LABEL maintainer.email="eriny@utah.gov"
 
 USER root
 
-WORKDIR /
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     ca-certificates && \
@@ -29,12 +26,7 @@ RUN micromamba install --name base -c conda-forge -c bioconda bakta=${BAKTA_VER}
     mkdir /data
 
 ENV PATH="/opt/conda/bin/:$PATH" \
-    LC_ALL=C \
-    BAKTA_DB=/db/db-light
-
-WORKDIR /db
-
-RUN bakta_db download --type light 
+    LC_ALL=C
 
 CMD ["bakta", "--help"]
 
@@ -48,9 +40,12 @@ RUN bakta --help && \
     bakta_db --help && \
     bakta --version
 
+RUN bakta_db list && \
+    bakta_db download --type light 
+
 RUN wget -q https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/195/815/GCF_000195815.1_ASM19581v1/GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
     gunzip GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
-    bakta GCF_000195815.1_ASM19581v1_genomic.fna && \
+    bakta --db /test/db-light GCF_000195815.1_ASM19581v1_genomic.fna && \
     head GCF_000195815.1_ASM19581v1_genomic.gbff
 
 RUN micromamba list
