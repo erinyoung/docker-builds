@@ -18,18 +18,7 @@ LABEL license="https://github.com/pcingola/SnpEff/blob/master/LICENSE.md"
 LABEL maintainer="Tom Iverson"
 LABEL maintainer.email="tiverson@utah.gov"
 
-# perl, python2, and r are required for the scripts
-## Use full openjdk-21-jdk
-# RUN apt-get update && apt-get install --no-install-recommends -y \
-#   openjdk-21-jdk \
-#   wget \
-#   ca-certificates \
-#   python3 \
-#   unzip \
-#   curl \
-#   && apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-## Use openjdk-21-jre-headless for a smaller image size.
 RUN apt-get update && apt-get install --no-install-recommends -y \
   openjdk-21-jre-headless \
   wget \
@@ -64,26 +53,14 @@ CMD ["snpeff", "-help"]
 
 WORKDIR /data
 
-# Run test of annotation
-#FROM app AS test
-
-# prints to stderr
-# RUN snpEff -help || snpsift -help || true
-
-# # getting test script from version 5.2a
-# RUN wget https://raw.githubusercontent.com/StaPH-B/docker-builds/refs/heads/master/build-files/snpeff/5.2a/test_snpeff_snpsift.sh && \
-#   bash test_snpeff_snpsift.sh && \
-#   grep -v "^#"  filtered.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
-
 FROM app AS test
 
 RUN snpeff -help 2>&1 || true && \
-    snpsift -help 2>&1 || true
+    snpsift -h 2>&1 || true
 
 RUN snpeff download -v hg19 && \
     snpeff hg19 /snpEff/examples/test.chr22.vcf > annotated.vcf && \
     grep -v "^#" annotated.vcf | head -5 | tr "\t" "\ " | sed -e "s/.\{75\}/&\n/g"
-
 
 # from issue https://github.com/StaPH-B/docker-builds/issues/760
 RUN buildDbNcbi.sh CP014866.1
