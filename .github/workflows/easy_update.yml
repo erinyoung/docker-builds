@@ -96,7 +96,7 @@ jobs:
             esac
           done
 
-          if [ -z "$prior" ] \vert{}\vert{} [ -z "$new" ]; then
+          if [ -z "$prior" ] || [ -z "$new" ]; then
             comment_on_issue "**Error (@update-bot):** Both \`prior\` and \`new\` versions must be defined."
             exit 1
           fi
@@ -115,7 +115,7 @@ jobs:
           fi
 
           if [ ! -d "$src_dir" ]; then
-            available=$(ls -1 "build-files/$tool" \vert{} tr '\n' ', ' \vert{} sed 's/,$//')
+            available=$(ls -1 "build-files/$tool" | tr '\n' ', ' | sed 's/,$//')
             comment_on_issue "**Error (@update-bot):** Prior directory \`$src_dir\` does not exist. Available versions: $available"
             exit 1
           fi
@@ -135,11 +135,11 @@ jobs:
           args_summary=""
           for key in "${!extra_args[@]}"; do
             val="${extra_args[$key]}"
-            sed -i -E "s|^([[:space:]]*ARG[[:space:]]+${key}[[:space:]]*=[[:space:]]*)([\"']?)[^\"'#]*([\"']?)([[:space:]]*(#.*)?)$|\1\"${val}\"\4\vert{}" "$dockerfile"
+            sed -i -E "s|^([[:space:]]*ARG[[:space:]]+${key}[[:space:]]*=[[:space:]]*)([\"']?)[^\"'#]*([\"']?)([[:space:]]*(#.*)?)$|\1\"${val}\"\4|" "$dockerfile"
             args_summary="${args_summary}- \`${key}=\"${val}\"\`"$'\n'
           done
 
-          sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4\vert{}" "$dockerfile"
+          sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4|" "$dockerfile"
 
           # 7. Git commit and push
           branch_name="update-$tool-$new"
