@@ -9,7 +9,6 @@ on:
 permissions:
   contents: write
   issues: write
-  repository-projects: read
 
 jobs:
   process-update:
@@ -33,6 +32,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
@@ -40,7 +40,7 @@ jobs:
             local msg="$1"
             echo "Posting to issue #${ISSUE_NUMBER:-}: $msg"
             if [ -n "${ISSUE_NUMBER:-}" ]; then
-              gh issue comment "$ISSUE_NUMBER" --body "$msg" > /dev/null || true
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$msg" > /dev/null || true
             fi
           }
 
@@ -117,6 +117,7 @@ jobs:
             git fetch upstream "$DEFAULT_BRANCH" --depth=1
             git checkout "upstream/$DEFAULT_BRANCH" -- "$src_dir" 2>/dev/null || true
             git reset HEAD "$src_dir" 2>/dev/null || true
+            git remote remove upstream 2>/dev/null || true
           fi
 
           # 5. Validate directories
@@ -179,7 +180,6 @@ jobs:
 
           branch_name="update-$tool-$new"
 
-          # Explicitly base the branch on the repository's default branch
           git fetch origin "$DEFAULT_BRANCH"
           git checkout -B "$branch_name" "origin/$DEFAULT_BRANCH"
 
@@ -190,7 +190,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "feat($tool): update $tool to $new"
+          git commit -m "feat($tool): update $tool to$new"
           git push origin "$branch_name" --force
 
           # 10. Comment on the original issue
@@ -218,10 +218,5 @@ jobs:
           } > "$comment_file"
 
           gh issue comment "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
             --body-file "$comment_file"
-
-
-          if [ -n "${ISSUE_NUMBER:-}" ]; then
-            gh issue comment "$ISSUE_NUMBER" --body-file "$comment_file" > /dev/null || true
-          fi
-          rm -f "$comment_file"
