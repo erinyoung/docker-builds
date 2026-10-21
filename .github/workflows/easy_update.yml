@@ -151,18 +151,37 @@ jobs:
 
           sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4|" "$dockerfile"
 
-          # 8. Compute Dockerfile diff
-          dockerfile_diff=$(git diff --no-index --color=never -- "$src_dir/Dockerfile" "$dst_dir/Dockerfile" || true)
-          if [ -z "$dockerfile_diff" ]; then
+          # 8. Validate and compute Dockerfile diff
+          if [ ! -f "$src_dir/Dockerfile" ]; then
+            comment_on_issue "**Error (@update-bot):** No prior \`Dockerfile\` found in \`$src_dir\`."
+            exit 1
+          fi
+
+          diff_status=0
+          dockerfile_diff=$(diff -u \
+            --label "$src_dir/Dockerfile (prior)" \
+            --label "$dst_dir/Dockerfile (new)" \
+            "$src_dir/Dockerfile" "$dst_dir/Dockerfile") || diff_status=$?
+
+          if [ "$diff_status" -gt 1 ]; then
+            comment_on_issue "**Error (@update-bot):** Failed to compare the prior and new Dockerfiles."
+            exit 1
+          fi
+
+          if [ "$diff_status" -eq 0 ]; then
             dockerfile_diff="No differences detected between Dockerfiles."
           fi
 
-          # 9. Git commit and push cleanly to branch
+          # 9. Commit and push the new version branch
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           branch_name="update-$tool-$new"
-          git checkout -B "$branch_name"
+
+          # Explicitly base the branch on the repository's default branch
+          git fetch origin "$DEFAULT_BRANCH"
+          git checkout -B "$branch_name" "origin/$DEFAULT_BRANCH"
+
           git add "$dst_dir"
 
           if git diff --staged --quiet; then
@@ -170,24 +189,36 @@ jobs:
             exit 0
           fi
 
-          git commit -m "feat($tool): update $tool to$new"
+          git commit -m "feat($tool): update $tool to $new"
           git push origin "$branch_name" --force
 
-          # 10. Post comment to issue with branch name and Dockerfile diff
+          # 10. Comment on the original issue
           comment_file=$(mktemp)
+          trap 'rm -f "$comment_file"' EXIT
+
           {
-            echo "**Notice (@update-bot):** Successfully committed and pushed update to branch \`$branch_name\`."
+            echo "## Update Bot: Dockerfile update prepared"
             echo ""
-            echo "- **Branch:** \`$branch_name\`"
+            echo "Successfully committed and pushed the updated Dockerfile."
+            echo ""
+            echo "- **Branch:** [\`$branch_name\`](https://github.com/$GITHUB_REPOSITORY/tree/$branch_name)"
+            echo "- **Prior version:** \`$prior\`"
+            echo "- **New version:** \`$new\`"
             echo "- **Source:** \`$src_dir/Dockerfile\`"
             echo "- **Destination:** \`$dst_dir/Dockerfile\`"
             echo ""
-            echo "### Dockerfile Diff"
+            echo "### Dockerfile diff"
             echo ""
             echo '```diff'
-            echo "$dockerfile_diff"
+            printf '%s\n' "$dockerfile_diff"
             echo '```'
+            echo ""
+            echo "_No pull request was created._"
           } > "$comment_file"
+
+          gh issue comment "$ISSUE_NUMBER" \
+            --body-file "$comment_file"
+
 
           if [ -n "${ISSUE_NUMBER:-}" ]; then
             gh issue comment "$ISSUE_NUMBER" --body-file "$comment_file" > /dev/null || true
