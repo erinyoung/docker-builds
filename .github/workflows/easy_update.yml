@@ -64,36 +64,36 @@ jobs:
           # 2. Extract command line and remove carriage returns
           cmd_line=$(echo "$EVENT_BODY" | tr -d '\r' | grep -m1 '@update-bot' | sed 's/.*@update-bot/@update-bot/' | tr -d '`' || true)
 
-          if [ -z "\$cmd_line" ]; then
+          if [ -z "$cmd_line" ]; then
             echo "No @update-bot command detected."
             exit 0
           fi
 
           # 3. Tokenize command safely
-          read -ra tokens <<< "\$cmd_line"
+          read -ra tokens <<< "$cmd_line"
 
-          if [ "\${#tokens[@]}" -lt 2 ]; then
+          if [ "${#tokens[@]}" -lt 2 ]; then
             comment_on_issue "**Error (@update-bot):** Incomplete command. Syntax: \`@update-bot <tool> prior=<old> new=<new> <ARG>=<val>\`"
             exit 1
           fi
 
-          tool="\${tokens[1]}"
+          tool="${tokens[1]}"
           prior=""
           new=""
           declare -A extra_args
 
           strip_quotes() {
-            local val="\$1"
-            val="\${val%\"}"
-            val="\${val#\"}"
-            val="\${val%\'}"
-            val="\${val#\'}"
-            echo "\$val"
+            local val="$1"
+            val="${val%\"}"
+            val="${val#\"}"
+            val="${val%\'}"
+            val="${val#\'}"
+            echo "$val"
           }
 
           # 4. Parse versions and ARG key-value pairs
-          for token in "\${tokens[@]:2}"; do
-            case "\$token" in
+          for token in "${tokens[@]:2}"; do
+            case "$token" in
               prior=*)
                 prior=$(strip_quotes "${token#prior=}")
                 ;;
@@ -101,77 +101,77 @@ jobs:
                 new=$(strip_quotes "${token#new=}")
                 ;;
               *=*)
-                key="\${token%%=*}"
-                raw_val="\${token#*=}"
-                extra_args["\$key"]=$(strip_quotes "$raw_val")
+                key="${token%%=*}"
+                raw_val="${token#*=}"
+                extra_args["$key"]=$(strip_quotes "$raw_val")
                 ;;
               *)
-                if [ -z "\$prior" ]; then
+                if [ -z "$prior" ]; then
                   prior=$(strip_quotes "$token")
-                elif [ -z "\$new" ]; then
+                elif [ -z "$new" ]; then
                   new=$(strip_quotes "$token")
                 fi
                 ;;
             esac
           done
 
-          if [ -z "$prior" ] \vert{}\vert{} [ -z "$new" ]; then
+          if [ -z "$prior" ] || [ -z "$new" ]; then
             comment_on_issue "**Error (@update-bot):** Both prior and new versions must be defined."
             exit 1
           fi
 
-          echo "Target Tool: \$tool"
-          echo "Prior Version: \$prior"
-          echo "New Version: \$new"
+          echo "Target Tool: $tool"
+          echo "Prior Version: $prior"
+          echo "New Version: $new"
 
           src_dir="build-files/$tool/$prior"
           dst_dir="build-files/$tool/$new"
 
           # 5. Validate directories
-          if [ ! -d "build-files/\$tool" ]; then
+          if [ ! -d "build-files/$tool" ]; then
             comment_on_issue "**Error (@update-bot):** Tool directory \`build-files/$tool\` not found."
             exit 1
           fi
 
-          if [ ! -d "\$src_dir" ]; then
+          if [ ! -d "$src_dir" ]; then
             available=$(ls -1 "build-files/$tool" 2>/dev/null | paste -sd ", " - || echo "none")
-            comment_on_issue "**Error (@update-bot):** Prior directory \`$src_dir\` does not exist. Available versions: \$available"
+            comment_on_issue "**Error (@update-bot):** Prior directory \`$src_dir\` does not exist. Available versions: $available"
             exit 1
           fi
 
           # 6. Copy files to new version directory
-          mkdir -p "\$dst_dir"
+          mkdir -p "$dst_dir"
           cp -r "$src_dir"/* "$dst_dir"/
           echo "Copied files from $src_dir to$dst_dir"
 
-          dockerfile="\$dst_dir/Dockerfile"
-          if [ ! -f "\$dockerfile" ]; then
+          dockerfile="$dst_dir/Dockerfile"
+          if [ ! -f "$dockerfile" ]; then
             comment_on_issue "**Error (@update-bot):** No \`Dockerfile\` found in \`$dst_dir\`."
             exit 1
           fi
 
           # 7. Update ARGs in the new Dockerfile
           args_summary=""
-          for key in "\${!extra_args[@]}"; do
+          for key in "${!extra_args[@]}"; do
             val="${extra_args[$key]}"
-            sed -i -E "s|^([[:space:]]*ARG[[:space:]]+${key}[[:space:]]*=[[:space:]]*)([\"']?)[^\"'#]*([\"']?)([[:space:]]*(#.*)?)$|\1\"${val}\"\4\vert{}" "$dockerfile"
-            args_summary="\${args_summary}- \`${key}=\"${val}\"\`"\$'\n'
+            sed -i -E "s|^([[:space:]]*ARG[[:space:]]+${key}[[:space:]]*=[[:space:]]*)([\"']?)[^\"'#]*([\"']?)([[:space:]]*(#.*)?)$|\1\"${val}\"\4|" "$dockerfile"
+            args_summary="${args_summary}- \`${key}=\"${val}\"\`"$'\n'
           done
 
-          sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4\vert{}" "$dockerfile"
+          sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4|" "$dockerfile"
 
           # 8. Git commit and push to branch
           branch_name="update-$tool-$new"
-          git checkout -B "\$branch_name"
-          git add "\$dst_dir"
+          git checkout -B "$branch_name"
+          git add "$dst_dir"
 
           if git diff --staged --quiet; then
             comment_on_issue "**Notice (@update-bot):** No changes detected for \`$dst_dir\`. Nothing was committed."
             exit 0
           fi
 
-          git commit -m "feat(\$tool): update $tool to$new"
-          git push origin "\$branch_name" --force
+          git commit -m "feat($tool): update $tool to$new"
+          git push origin "$branch_name" --force
 
           # 9. Notify issue
           comment_on_issue "**Notice (@update-bot):** Files copied from \`$src_dir\` to \`$dst_dir\`, ARGs updated, and committed to branch \`$branch_name\`."
