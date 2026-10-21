@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   issues: write
+  workflows: write
 
 jobs:
   process-update:
@@ -43,25 +44,7 @@ jobs:
             fi
           }
 
-          # 1. Sync repository with upstream StaPH-B/docker-builds
-          echo "Syncing workspace with upstream StaPH-B/docker-builds..."
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git remote add upstream https://github.com/StaPH-B/docker-builds.git 2>/dev/null || git remote set-url upstream https://github.com/StaPH-B/docker-builds.git
-          git fetch upstream "$DEFAULT_BRANCH"
-
-          # Fast-forward local branch to match upstream
-          git checkout "$DEFAULT_BRANCH"
-          if ! git merge --ff-only "upstream/$DEFAULT_BRANCH"; then
-            echo "Fast-forward not possible, performing merge commit..."
-            git merge "upstream/$DEFAULT_BRANCH" -m "chore: sync with upstream StaPH-B/docker-builds"
-          fi
-
-          # Push synced master back to origin so fork is no longer stuck
-          git push origin "$DEFAULT_BRANCH" || echo "Notice: Could not push updated default branch to fork origin, continuing with updated workspace."
-
-          # 2. Extract command line and remove carriage returns
+          # 1. Extract command line and remove carriage returns
           cmd_line=$(echo "$EVENT_BODY" | tr -d '\r' | grep -m1 '@update-bot' | sed 's/.*@update-bot/@update-bot/' | tr -d '`' || true)
 
           if [ -z "$cmd_line" ]; then
@@ -69,7 +52,7 @@ jobs:
             exit 0
           fi
 
-          # 3. Tokenize command safely
+          # 2. Tokenize command safely
           read -ra tokens <<< "$cmd_line"
 
           if [ "${#tokens[@]}" -lt 2 ]; then
@@ -91,7 +74,7 @@ jobs:
             echo "$val"
           }
 
-          # 4. Parse versions and ARG key-value pairs
+          # 3. Parse versions and ARG key-value pairs
           for token in "${tokens[@]:2}"; do
             case "$token" in
               prior=*)
@@ -127,6 +110,15 @@ jobs:
           src_dir="build-files/$tool/$prior"
           dst_dir="build-files/$tool/$new"
 
+          # 4. If prior version is missing locally, pull just that directory from upstream
+          if [ ! -d "$src_dir" ]; then
+            echo "Directory $src_dir not found in local workspace. Checking upstream StaPH-B/docker-builds..."
+            git remote add upstream https://github.com/StaPH-B/docker-builds.git 2>/dev/null || git remote set-url upstream https://github.com/StaPH-B/docker-builds.git
+            git fetch upstream "$DEFAULT_BRANCH" --depth=1
+            git checkout "upstream/$DEFAULT_BRANCH" -- "$src_dir" 2>/dev/null || true
+            git reset HEAD "$src_dir" 2>/dev/null || true
+          fi
+
           # 5. Validate directories
           if [ ! -d "build-files/$tool" ]; then
             comment_on_issue "**Error (@update-bot):** Tool directory \`build-files/$tool\` not found."
@@ -135,7 +127,7 @@ jobs:
 
           if [ ! -d "$src_dir" ]; then
             available=$(ls -1 "build-files/$tool" 2>/dev/null | paste -sd ", " - || echo "none")
-            comment_on_issue "**Error (@update-bot):** Prior directory \`$src_dir\` does not exist. Available versions: $available"
+            comment_on_issue "**Error (@update-bot):** Prior directory \`$src_dir\` does not exist locally or upstream. Available versions: $available"
             exit 1
           fi
 
@@ -160,7 +152,10 @@ jobs:
 
           sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4|" "$dockerfile"
 
-          # 8. Git commit and push to branch
+          # 8. Git commit and push cleanly to branch
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           branch_name="update-$tool-$new"
           git checkout -B "$branch_name"
           git add "$dst_dir"
