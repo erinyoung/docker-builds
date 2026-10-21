@@ -190,7 +190,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "feat($tool): update $tool to$new"
+          git commit -m "add $tool version $new"
           git push origin "$branch_name" --force
 
           # 10. Comment on the original issue
