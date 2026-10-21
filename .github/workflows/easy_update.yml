@@ -151,7 +151,13 @@ jobs:
 
           sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4|" "$dockerfile"
 
-          # 8. Git commit and push cleanly to branch
+          # 8. Compute Dockerfile diff
+          dockerfile_diff=$(git diff --no-index --color=never -- "$src_dir/Dockerfile" "$dst_dir/Dockerfile" || true)
+          if [ -z "$dockerfile_diff" ]; then
+            dockerfile_diff="No differences detected between Dockerfiles."
+          fi
+
+          # 9. Git commit and push cleanly to branch
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -167,5 +173,23 @@ jobs:
           git commit -m "feat($tool): update $tool to$new"
           git push origin "$branch_name" --force
 
-          # 9. Notify issue
-          comment_on_issue "**Notice (@update-bot):** Files copied from \`$src_dir\` to \`$dst_dir\`, ARGs updated, and committed to branch \`$branch_name\`."
+          # 10. Post comment to issue with branch name and Dockerfile diff
+          comment_file=$(mktemp)
+          {
+            echo "**Notice (@update-bot):** Successfully committed and pushed update to branch \`$branch_name\`."
+            echo ""
+            echo "- **Branch:** \`$branch_name\`"
+            echo "- **Source:** \`$src_dir/Dockerfile\`"
+            echo "- **Destination:** \`$dst_dir/Dockerfile\`"
+            echo ""
+            echo "### Dockerfile Diff"
+            echo ""
+            echo '```diff'
+            echo "$dockerfile_diff"
+            echo '```'
+          } > "$comment_file"
+
+          if [ -n "${ISSUE_NUMBER:-}" ]; then
+            gh issue comment "$ISSUE_NUMBER" --body-file "$comment_file" > /dev/null || true
+          fi
+          rm -f "$comment_file"
