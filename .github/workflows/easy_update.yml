@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   process-update:
-    # Only run on issues (not PR comments) mentioning @update-bot
     if: |
       (github.event.issue.pull_request == null) &&
       (
@@ -24,27 +23,26 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Process Update Request
         env:
-          EVENT_BODY: ${{ github.event_name == 'issue_comment' && github.event.comment.body || github.event.issue.body }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_BODY: \${{ github.event_name == 'issue_comment' && github.event.comment.body || github.event.issue.body }}
+          ISSUE_NUMBER: \${{ github.event.issue.number }}
+          DEFAULT_BRANCH: \${{ github.event.repository.default_branch }}
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
-          # Helper to post comments back to the issue
           comment_on_issue() {
-            if [ -n "${ISSUE_NUMBER:-}" ]; then
-              gh issue comment "$ISSUE_NUMBER" --body "$1" || true
+            if [ -n "\${ISSUE_NUMBER:-}" ]; then
+              gh issue comment "\$ISSUE_NUMBER" --body "\$1" || true
             fi
           }
 
-          # 1. Extract command line starting with @update-bot
+          # 1. Extract command line
           cmd_line=$(echo "$EVENT_BODY" | grep -m1 '@update-bot' | sed 's/.*@update-bot/@update-bot/' | tr -d '`' || true)
 
           if [ -z "\$cmd_line" ]; then
@@ -52,11 +50,11 @@ jobs:
             exit 0
           fi
 
-          # 2. Tokenize command safely without eval (avoids shell injection)
+          # 2. Tokenize command safely
           read -ra tokens <<< "\$cmd_line"
 
           if [ "\${#tokens[@]}" -lt 2 ]; then
-            comment_on_issue "**@update-bot error:** Incomplete command. Syntax: \`@update-bot <tool> prior=<old version> new=<new version> <ARG>=<val>\`"
+            comment_on_issue "**Error (@update-bot):** Incomplete command. Syntax: \`@update-bot <tool> prior=<old> new=<new> <ARG>=<val>\`"
             exit 1
           fi
 
@@ -99,7 +97,7 @@ jobs:
           done
 
           if [ -z "$prior" ] \vert{}\vert{} [ -z "$new" ]; then
-            comment_on_issue "**@update-bot error:** Both \`prior\` and \`new\` versions must be defined."
+            comment_on_issue "**Error (@update-bot):** Both \`prior\` and \`new\` versions must be defined."
             exit 1
           fi
 
@@ -110,39 +108,37 @@ jobs:
           src_dir="build-files/$tool/$prior"
           dst_dir="build-files/$tool/$new"
 
-          # 4. Validate paths
+          # 4. Validate directories
           if [ ! -d "build-files/\$tool" ]; then
-            comment_on_issue "**@update-bot error:** Tool directory \`build-files/$tool\` not found."
+            comment_on_issue "**Error (@update-bot):** Tool directory \`build-files/$tool\` not found."
             exit 1
           fi
 
           if [ ! -d "\$src_dir" ]; then
             available=\$(ls -1 "build-files/$tool" \vert{} tr '\n' ', ' \vert{} sed 's/,$//')
-            comment_on_issue "**@update-bot error:** Prior directory \`$src_dir\` does not exist. Available versions: \$available"
+            comment_on_issue "**Error (@update-bot):** Prior directory \`$src_dir\` does not exist. Available versions: \$available"
             exit 1
           fi
 
-          # 5. Copy files to the new directory (prior directory remains untouched)
+          # 5. Copy files to new version directory
           mkdir -p "\$dst_dir"
           cp -r "$src_dir"/* "$dst_dir"/
           echo "Copied files from $src_dir to$dst_dir"
 
           dockerfile="\$dst_dir/Dockerfile"
           if [ ! -f "\$dockerfile" ]; then
-            comment_on_issue "**@update-bot error:** No \`Dockerfile\` found in \`$dst_dir\`."
+            comment_on_issue "**Error (@update-bot):** No \`Dockerfile\` found in \`$dst_dir\`."
             exit 1
           fi
 
-          # 6. Update ARGs in the new Dockerfile using sed
+          # 6. Update ARGs in the new Dockerfile
           args_summary=""
           for key in "\${!extra_args[@]}"; do
             val="${extra_args[$key]}"
-            # Matches ARG KEY=... while preserving optional comments
             sed -i -E "s|^([[:space:]]*ARG[[:space:]]+${key}[[:space:]]*=[[:space:]]*)([\"']?)[^\"'#]*([\"']?)([[:space:]]*(#.*)?)$|\1\"${val}\"\4\vert{}" "$dockerfile"
             args_summary="\${args_summary}- \`${key}=\"${val}\"\`"\$'\n'
           done
 
-          # Optional: update hardcoded LABEL software.version if set to prior
           sed -i -E "s|^([[:space:]]*LABEL[[:space:]]+software\.version[[:space:]]*=[[:space:]]*)([\"']?)${prior}([\"']?)([[:space:]]*(#.*)?)$|\1\"${new}\"\4\vert{}" "$dockerfile"
 
           # 7. Git commit and push
@@ -154,14 +150,14 @@ jobs:
           git add "\$dst_dir"
 
           if git diff --staged --quiet; then
-            comment_on_issue "**@update-bot:** No changes detected for \`$dst_dir\`. Pull request was not created."
+            comment_on_issue "**Notice (@update-bot):** No changes detected for \`$dst_dir\`. Pull request was not created."
             exit 0
           fi
 
-          git commit -m "feat(\$tool): update $tool to $new"
+          git commit -m "feat(\$tool): update $tool to$new"
           git push origin "\$branch_name" --force
 
-          # 8. Create PR via GitHub CLI
+          # 8. Create PR
           pr_body=\$(cat << PR_EOF
           ### Automated Container Update
 
@@ -182,12 +178,12 @@ jobs:
           existing_pr=\$(gh pr list --head "\$branch_name" --json url --jq '.[0].url' || true)
 
           if [ -n "\$existing_pr" ]; then
-            comment_on_issue "**@update-bot** updated branch \`$branch_name\` for existing PR: \$existing_pr"
+            comment_on_issue "**Notice (@update-bot):** Updated branch \`$branch_name\` for existing PR: \$existing_pr"
           else
             new_pr=\$(gh pr create \
               --base "\$DEFAULT_BRANCH" \
               --head "\$branch_name" \
               --title "Update $tool to$new" \
               --body "\$pr_body")
-            comment_on_issue "**@update-bot** created pull request: \$new_pr"
+            comment_on_issue "**Notice (@update-bot):** Created pull request: \$new_pr"
           fi
