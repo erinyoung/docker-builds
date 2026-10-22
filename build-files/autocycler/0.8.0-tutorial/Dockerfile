@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://github.com/rrwick/Autocycler/archive/refs/tags/v${AUTOCYCLER_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/rrwick/Autocycler/archive/refs/tags/v${AUTOCYCLER_VER}.tar.gz && \
     tar -xvf v${AUTOCYCLER_VER}.tar.gz && \
     micromamba install -y --name base -f /Autocycler-${AUTOCYCLER_VER}/pipelines/Conda_environment_file_by_Ryan_Wick/environment.yml && \
     micromamba clean -a -f -y && \
@@ -29,7 +29,7 @@ RUN wget https://github.com/rrwick/Autocycler/archive/refs/tags/v${AUTOCYCLER_VE
 WORKDIR /opt/conda/bin
 
 # Downloading autocycler and moving it to appropriate env path.
-RUN wget https://github.com/rrwick/Autocycler/releases/download/v${AUTOCYCLER_VER}/autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/rrwick/Autocycler/releases/download/v${AUTOCYCLER_VER}/autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz && \
     tar -xzf autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz && \
     rm autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz
 
