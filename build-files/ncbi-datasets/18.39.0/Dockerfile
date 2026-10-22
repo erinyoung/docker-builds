@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /usr/local/bin
 
 # install ncbi datasets tool (pre-compiled binary)
-RUN wget https://github.com/ncbi/datasets/releases/download/v${DATASETS_VER}/linux-amd64.cli.package.zip && \
+RUN wget --progress=dot:giga https://github.com/ncbi/datasets/releases/download/v${DATASETS_VER}/linux-amd64.cli.package.zip && \
   unzip linux-amd64.cli.package.zip && \
   rm linux-amd64.cli.package.zip && \
   chmod +x dataformat datasets
