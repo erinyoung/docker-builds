@@ -4,7 +4,6 @@ FROM staphb/bakta:${BAKTA_VER} AS app
 
 ARG BAKTA_VER
 
-
 # 'LABEL' instructions tag the image with metadata that might be important to the user
 LABEL base.image="staphb/bakta:${BAKTA_VER}"
 LABEL dockerfile.version="1"
@@ -34,7 +33,7 @@ RUN bakta --help && \
     bakta_db --help && \
     bakta --version
 
-RUN wget -q https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/195/815/GCF_000195815.1_ASM19581v1/GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
+RUN wget --progress=dot:giga https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/195/815/GCF_000195815.1_ASM19581v1/GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
     gunzip GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
     bakta GCF_000195815.1_ASM19581v1_genomic.fna && \
     head GCF_000195815.1_ASM19581v1_genomic.gbff
