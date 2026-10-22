@@ -45,17 +45,16 @@ COPY --from=htslib   /usr/local/lib/     /usr/local/lib/
 COPY --from=htslib   /usr/local/include/ /usr/local/include/
 
 # download and install sambamba
-RUN wget -q https://github.com/biod/sambamba/releases/download/v${SAMBAMBAVER}/sambamba-${SAMBAMBAVER}-linux-amd64-static.gz && \
+RUN wget --progress=dot:giga https://github.com/biod/sambamba/releases/download/v${SAMBAMBAVER}/sambamba-${SAMBAMBAVER}-linux-amd64-static.gz && \
     gzip -d sambamba-${SAMBAMBAVER}-linux-amd64-static.gz && \
     mv sambamba-${SAMBAMBAVER}-linux-amd64-static /usr/local/bin/sambamba && \
     chmod +x /usr/local/bin/sambamba
 
 # download and install bbtools
-RUN wget -q https://sourceforge.net/projects/bbmap/files/BBMap_${BBTOOLSVER}.tar.gz && \
+RUN wget --progress=dot:giga https://sourceforge.net/projects/bbmap/files/BBMap_${BBTOOLSVER}.tar.gz && \
     tar -xzf BBMap_${BBTOOLSVER}.tar.gz && \
     rm BBMap_${BBTOOLSVER}.tar.gz && \
     mkdir /data
-
 
 ENV PATH=/bbmap/:$PATH \
     LC_ALL=C
@@ -74,6 +73,6 @@ WORKDIR /test
 RUN tail -n 90 /bbmap/docs/TableOfContents.txt
 
 # get test data and test one thing that uses samtools/sambamba
-RUN wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.primertrim.sorted.bam && \
+RUN wget --progress=dot:giga https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.primertrim.sorted.bam && \
     streamsam.sh in='SRR13957123.primertrim.sorted.bam' out='test_SRR13957123.primertrim.sorted.fastq.gz' && \
     test -f test_SRR13957123.primertrim.sorted.fastq.gz
