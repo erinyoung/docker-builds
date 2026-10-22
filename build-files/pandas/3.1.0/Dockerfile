@@ -41,5 +41,5 @@ RUN pip list | grep pandas
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget 
 
-RUN wget https://raw.githubusercontent.com/StaPH-B/docker-builds/refs/heads/master/build-files/pandas/2.2.3/test_pandas.py && \
+RUN wget --progress=dot:giga https://raw.githubusercontent.com/StaPH-B/docker-builds/refs/heads/master/build-files/pandas/2.2.3/test_pandas.py && \
     python3 test_pandas.py
