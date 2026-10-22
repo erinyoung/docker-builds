@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 # download SEQKIT and organize directories
-RUN wget -q https://github.com/shenwei356/seqkit/releases/download/v${SEQKIT_VER}/seqkit_linux_amd64.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/shenwei356/seqkit/releases/download/v${SEQKIT_VER}/seqkit_linux_amd64.tar.gz && \
 	tar -xzf seqkit_linux_amd64.tar.gz && \
 	mv seqkit /usr/local/bin/. && \
 	rm seqkit_linux_amd64.tar.gz && \
@@ -50,5 +50,5 @@ WORKDIR /test
 RUN seqkit --help
 
 #download test .fasta and check that SEQKIT can run to generate stats
-RUN wget -q https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.consensus.fa && \
+RUN wget --progress=dot:giga https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123.consensus.fa && \
 	seqkit stat *
