@@ -35,7 +35,10 @@ RUN wget --progress=dot:giga https://github.com/rrwick/Autocycler/releases/downl
 
 # Put env first on PATH
 ENV PATH="/opt/conda/bin/:${PATH}" \
- LC_ALL=C.UTF-8
+ LC_ALL=C.UTF-8 PLASSEMBLER_DB=/plassembler_db
+
+WORKDIR /
+RUN plassembler download -d /plassembler_db
 
 CMD ["autocycler", "--help"]
 
@@ -62,7 +65,20 @@ RUN threads=2 && \
     mkdir assemblies && \
     for assembler in canu flye metamdbg miniasm necat nextdenovo plassembler raven; do \
         for i in 01 02; do \
-            autocycler helper "$assembler" --reads subsampled_reads/sample_"$i".fastq --out_prefix assemblies/"$assembler"_"$i" --threads "$threads" --genome_size "$genome_size"; \
+            if [ "$assembler" = "canu" ]; then \
+                autocycler helper canu \
+                    --reads subsampled_reads/sample_"$i".fastq \
+                    --out_prefix assemblies/canu_"$i" \
+                    --threads "$threads" \
+                    --genome_size "$genome_size" \
+                    --args maxThreads=2; \
+            else \
+                autocycler helper "$assembler" \
+                    --reads subsampled_reads/sample_"$i".fastq \
+                    --out_prefix assemblies/"$assembler"_"$i" \
+                    --threads "$threads" \
+                    --genome_size "$genome_size" ; \
+            fi \
         done; \
     done && \
     # Optional step: remove the subsampled reads to save space
