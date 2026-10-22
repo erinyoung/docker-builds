@@ -34,7 +34,7 @@ WORKDIR /test
 RUN pod5 --help && \
     pod5 --version
 
-RUN wget https://github.com/nanoporetech/dorado/raw/release-v0.7/tests/data/pod5/dna_r10.4.1_e8.2_260bps/dna_r10.4.1_e8.2_260bps-FLO_PRO114-SQK_NBD114_96_260-4000.pod5
+RUN wget --progress=dot:giga https://github.com/nanoporetech/dorado/raw/release-v0.7/tests/data/pod5/dna_r10.4.1_e8.2_260bps/dna_r10.4.1_e8.2_260bps-FLO_PRO114-SQK_NBD114_96_260-4000.pod5
 
 RUN pod5 view . --include "read_id, channel" --output summary.tsv && \
     pod5 subset . --summary summary.tsv --columns channel
