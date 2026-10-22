@@ -44,7 +44,7 @@ RUN ppanggolin --help && \
     ppanggolin --version
 
 # getting test files from github repo
-RUN wget -q https://github.com/labgem/PPanGGOLiN/archive/refs/tags/${PPANGGOLIN_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/labgem/PPanGGOLiN/archive/refs/tags/${PPANGGOLIN_VER}.tar.gz && \
     tar -xvf ${PPANGGOLIN_VER}.tar.gz
 
 RUN cd PPanGGOLiN-${PPANGGOLIN_VER}/testingDataset && \
