@@ -1,11 +1,30 @@
-FROM staphb/ispcr:33 AS ispcr
+ARG ELGATO_VER="1.24.1"
+ARG ISPCR_VER="33"
 
-## App ##
-FROM ubuntu:jammy AS app
+FROM ubuntu:noble as builder
 
-ARG ELGATO_VER="1.24.0"
+ARG ISPCR_VER
+ARG MACHTYPE="x86_64-pc-linux-gnu"
 
-LABEL base.image="ubuntu:jammy"
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    unzip
+
+RUN wget https://hgwdev.gi.ucsc.edu/~kent/src/isPcr${ISPCR_VER}.zip &&\
+    unzip isPcr${ISPCR_VER}.zip &&\
+    cd isPcrSrc &&\
+    sed -i 's/-Werror//g' inc/common.mk &&\
+    mkdir -p bin/$MACHTYPE &&\
+    mkdir -p lib/$MACHTYPE &&\
+    make HOME=$PWD MACHTYPE=${MACHTYPE} C_INCLUDE_PATH=/usr/include LIBRARY_PATH=/usr/lib CFLAGS="-fcommon" &&\
+    mv bin/$MACHTYPE/* /usr/local/bin/
+
+FROM ubuntu:noble AS app
+
+ARG ELGATO_VER
+
+LABEL base.image="ubuntu:noble"
 LABEL dockerfile.version="1"
 LABEL software="el_gato"
 LABEL software.version="${ELGATO_VER}"
@@ -24,8 +43,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     ncbi-blast+ && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-# copy precompiled ispcr from staphb image    
-COPY --from=ispcr /usr/local/bin/isPcr /usr/local/bin/isPcr
+# copy precompiled ispcr from builder stage    
+COPY --from=builder /usr/local/bin/* /usr/local/bin/
 
 # install el_gato
 RUN wget --no-check-certificate https://github.com/CDCgov/el_gato/archive/refs/tags/${ELGATO_VER}.tar.gz &&\
