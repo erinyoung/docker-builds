@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget
 
 # get ARAGORN
-RUN wget -q https://www.trna.se/ARAGORN/Downloads/aragorn${ARAGORN_VER}.c && \
+RUN wget --progress=dot:giga https://www.trna.se/ARAGORN/Downloads/aragorn${ARAGORN_VER}.c && \
     gcc -O3 -ffast-math -finline-functions -o aragorn aragorn${ARAGORN_VER}.c && \
     /aragorn -h 
 
@@ -45,12 +45,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 # get MMSEQS2
-RUN wget -q https://github.com/soedinglab/MMseqs2/releases/download/${MMSEQS2_VER}/mmseqs-linux-avx2.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/soedinglab/MMseqs2/releases/download/${MMSEQS2_VER}/mmseqs-linux-avx2.tar.gz && \
     tar -xvf mmseqs-linux-avx2.tar.gz && \
     rm mmseqs-linux-avx2.tar.gz
 
 # get genomad add (with tensorflow cpu and tensorflow)
-RUN wget -q https://github.com/apcamargo/genomad/archive/refs/tags/v${GENOMAD_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/apcamargo/genomad/archive/refs/tags/v${GENOMAD_VER}.tar.gz && \
     python3 -m pip install --no-cache-dir --break-system-packages v${GENOMAD_VER}.tar.gz && \
     python3 -m pip install --no-cache-dir --break-system-packages tensorflow-cpu && \
     rm -rf v${GENOMAD_VER}.tar.gz && \
@@ -80,6 +80,6 @@ RUN genomad --help && \
 
 # downloads genome from NCBI and runs end-to-end (which looks like all steps) on the downloaded fasta
 RUN pip list && \
-    wget -q https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/025/259/185/GCA_025259185.1_ASM2525918v1/GCA_025259185.1_ASM2525918v1_genomic.fna.gz && \
+    wget --progress=dot:giga https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/025/259/185/GCA_025259185.1_ASM2525918v1/GCA_025259185.1_ASM2525918v1_genomic.fna.gz && \
     gunzip GCA_025259185.1_ASM2525918v1_genomic.fna.gz && \
     genomad end-to-end GCA_025259185.1_ASM2525918v1_genomic.fna test /genomad_db --splits 16
