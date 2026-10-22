@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
 # get the piranha code repo; creating conda environment using environment.yml supplied w/ Piranha code
-RUN wget -q https://github.com/polio-nanopore/piranha/archive/refs/tags/${PIRANHA_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/polio-nanopore/piranha/archive/refs/tags/${PIRANHA_VER}.tar.gz && \
     tar -xf ${PIRANHA_VER}.tar.gz && \
     micromamba create -n piranha -y -f /piranha-${PIRANHA_VER}/environment.yml && \
     /opt/conda/envs/piranha/bin/pip install ${PIRANHA_VER}.tar.gz --no-cache-dir && \
