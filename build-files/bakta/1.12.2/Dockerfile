@@ -42,7 +42,7 @@ RUN bakta --help && \
 RUN bakta_db list && \
     bakta_db download --type light 
 
-RUN wget -q https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/195/815/GCF_000195815.1_ASM19581v1/GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
+RUN wget --progress=dot:giga https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/195/815/GCF_000195815.1_ASM19581v1/GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
     gunzip GCF_000195815.1_ASM19581v1_genomic.fna.gz && \
     bakta --db /test/db-light GCF_000195815.1_ASM19581v1_genomic.fna && \
     head GCF_000195815.1_ASM19581v1_genomic.gbff
