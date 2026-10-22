@@ -66,10 +66,10 @@ RUN freyja --help && freyja --version
 WORKDIR /test
 
 # Grab test data from Freyja version 1.3.4
-RUN wget -O /test/Freyja_WWSC2.bam https://github.com/StaPH-B/docker-builds/blob/master/build-files/freyja/1.3.4/tests/Freyja_WWSC2.bam?raw=true && \
-    wget -P /test https://raw.githubusercontent.com/StaPH-B/docker-builds/master/build-files/freyja/1.3.4/tests/Freyja_depths.tsv && \
-    wget -P /test https://raw.githubusercontent.com/StaPH-B/docker-builds/master/build-files/freyja/1.3.4/tests/Freyja_variants.tsv && \
-    wget -P /test https://raw.githubusercontent.com/StaPH-B/docker-builds/master/build-files/freyja/1.3.4/tests/nCoV-2019.reference.fasta
+RUN wget --progress=dot:giga -O /test/Freyja_WWSC2.bam https://github.com/StaPH-B/docker-builds/blob/master/build-files/freyja/1.3.4/tests/Freyja_WWSC2.bam?raw=true && \
+    wget --progress=dot:giga -P /test https://raw.githubusercontent.com/StaPH-B/docker-builds/master/build-files/freyja/1.3.4/tests/Freyja_depths.tsv && \
+    wget --progress=dot:giga -P /test https://raw.githubusercontent.com/StaPH-B/docker-builds/master/build-files/freyja/1.3.4/tests/Freyja_variants.tsv && \
+    wget --progress=dot:giga -P /test https://raw.githubusercontent.com/StaPH-B/docker-builds/master/build-files/freyja/1.3.4/tests/nCoV-2019.reference.fasta
 
 # Run Freyja
 RUN freyja variants /test/Freyja_WWSC2.bam --variants /test/test_variants.tsv --depths /test/test_depths.tsv --ref /test/nCoV-2019.reference.fasta && \
