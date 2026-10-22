@@ -1,4 +1,4 @@
-FROM ubuntu:jammy AS app
+FROM ubuntu:noble AS app
 
 # for easy upgrade later. ARG variables only persist during build time.
 ARG K2VER="2.18.0-RC1"
@@ -35,7 +35,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
 RUN cpanm Getopt::Std
 
 # DL Kraken2, unpack, and install
-RUN wget https://github.com/DerrickWood/kraken2/archive/v${K2VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/DerrickWood/kraken2/archive/v${K2VER}.tar.gz && \
     tar -xzf v${K2VER}.tar.gz && \
     rm -rf v${K2VER}.tar.gz && \
     cd kraken2-${K2VER} && \
@@ -52,7 +52,7 @@ CMD [ "kraken2", "--help" ]
 WORKDIR /kraken2-db
 
 # getting viral database
-RUN wget -q https://genome-idx.s3.amazonaws.com/kraken/k2_viral_${DBVER}.tar.gz && \
+RUN wget --progress=dot:giga https://genome-idx.s3.amazonaws.com/kraken/k2_viral_${DBVER}.tar.gz && \
     tar -zxf k2_viral_${DBVER}.tar.gz && \
     rm k2_viral_${DBVER}.tar.gz
 
@@ -73,8 +73,8 @@ RUN kraken2 --help && \
 WORKDIR /test
 
 # download and classify SARS-CoV-2 reads
-RUN wget -q https://github.com/StaPH-B/docker-builds/blob/83ee344304794f4ffa162d1c082bb35f916badcf/tests/SARS-CoV-2/SRR13957123_1.fastq.gz?raw=true -O SRR13957123_1.fastq.gz && \
-    wget -q https://github.com/StaPH-B/docker-builds/blob/83ee344304794f4ffa162d1c082bb35f916badcf/tests/SARS-CoV-2/SRR13957123_2.fastq.gz?raw=true -O SRR13957123_2.fastq.gz && \
+RUN wget --progress=dot:giga https://github.com/StaPH-B/docker-builds/blob/83ee344304794f4ffa162d1c082bb35f916badcf/tests/SARS-CoV-2/SRR13957123_1.fastq.gz?raw=true -O SRR13957123_1.fastq.gz && \
+    wget --progress=dot:giga https://github.com/StaPH-B/docker-builds/blob/83ee344304794f4ffa162d1c082bb35f916badcf/tests/SARS-CoV-2/SRR13957123_2.fastq.gz?raw=true -O SRR13957123_2.fastq.gz && \
     kraken2 --paired --classified-out cseqs#.fq --db /kraken2-db SRR13957123_1.fastq.gz SRR13957123_2.fastq.gz --report kraken2_report.txt --output classifiedreads.txt && \
     echo "printing contents of kraken2_report.txt" && \
     echo "----------------------------------------" && \
