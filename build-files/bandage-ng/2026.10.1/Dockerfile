@@ -2,7 +2,7 @@ ARG BANDAGENG_VER="2026.10.1"
 
 FROM ubuntu:noble AS app
 ARG BANDAGENG_VER
-ARG COMMIT="17665e2"
+ARG COMMIT="4ac44b0"
 
 LABEL base.image="ubuntu:noble"
 LABEL dockerfile.version="1"
@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /opt
 
-RUN wget https://github.com/asl/BandageNG/releases/download/v${BANDAGENG_VER}/BandageNG-Linux-${COMMIT}.AppImage && \
+RUN wget --progress=dot:giga https://github.com/asl/BandageNG/releases/download/v${BANDAGENG_VER}/BandageNG-Linux-${COMMIT}.AppImage && \
     mv BandageNG-Linux-${COMMIT}.AppImage /opt/BandageNG.AppImage && \
     chmod +x ./BandageNG.AppImage && \
     ./BandageNG.AppImage --appimage-extract && \
@@ -54,14 +54,14 @@ RUN BandageNG --version && \
 RUN echo "Base help message" && \
     BandageNG --help
 
-RUN wget -q https://github.com/asl/BandageNG/archive/refs/tags/v${BANDAGENG_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/asl/BandageNG/archive/refs/tags/v${BANDAGENG_VER}.tar.gz && \
     tar -xzf v${BANDAGENG_VER}.tar.gz && \
     mv BandageNG-${BANDAGENG_VER}/tests /test/bandage_tests && \
     rm v${BANDAGENG_VER}.tar.gz && \
     rm -r BandageNG-${BANDAGENG_VER}
 
-RUN cd bandage_tests && \
-    ./bandage_command_line_tests.sh /usr/local/bin/BandageNG
+WORKDIR /test/bandage_tests
+RUN ./bandage_command_line_tests.sh /usr/local/bin/BandageNG
 
 # This should generate an output image nearly identical to bandage_tests/test.png
 RUN BandageNG image bandage_tests/inputs/test.gfa output.png
