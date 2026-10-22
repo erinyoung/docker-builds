@@ -25,11 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-RUN wget http://opengene.org/fastp/fastp.${FASTP_VER} && \
+RUN wget --progress=dot:giga http://opengene.org/fastp/fastp.${FASTP_VER} && \
     mv fastp.${FASTP_VER} fastp && \
     chmod a+x ./fastp
 
-RUN wget https://raw.githubusercontent.com/OpenGene/fastp/v${FASTP_VER}/parallel.py \
+RUN wget --progress=dot:giga https://raw.githubusercontent.com/OpenGene/fastp/v${FASTP_VER}/parallel.py \
     -O /usr/local/bin/parallel.py && \
     chmod +x /usr/local/bin/parallel.py
 
@@ -38,7 +38,6 @@ ENV LC_ALL=C
 WORKDIR /data
 
 CMD [ "fastp", "--help" ]
-
 
 FROM app AS test
 
@@ -53,7 +52,7 @@ RUN jq --help && \
 RUN parallel.py -h
 
 # downloading sars-cov-2 fastq test files
-RUN wget -q \
+RUN wget --progress=dot:giga \
     https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123_1.fastq.gz \
     https://raw.githubusercontent.com/StaPH-B/docker-builds/master/tests/SARS-CoV-2/SRR13957123_2.fastq.gz
 
