@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps && \
     apt-get autoclean && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q https://github.com/quinlan-lab/bedder-rs/releases/download/v${BEDDER_RS_VER}/bedder-static-linux-x86_64 && \
+RUN wget --progress=dot:giga https://github.com/quinlan-lab/bedder-rs/releases/download/v${BEDDER_RS_VER}/bedder-static-linux-x86_64 && \
     ls -lah && \
     mv bedder-static-linux-x86_64 /usr/local/bin/bedder && \
     chmod +x /usr/local/bin/bedder
@@ -35,7 +35,6 @@ CMD [ "bedder", "--help" ]
 
 WORKDIR /data
 
-
 FROM app AS test
 ARG BEDDER_RS_VER
 
@@ -44,10 +43,9 @@ WORKDIR /test
 RUN bedder --help && \
     bedder --version
 
-RUN wget -q https://github.com/quinlan-lab/bedder-rs/archive/refs/tags/v${BEDDER_RS_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/quinlan-lab/bedder-rs/archive/refs/tags/v${BEDDER_RS_VER}.tar.gz && \
     tar -xzf v${BEDDER_RS_VER}.tar.gz && \
-    rm v${BEDDER_RS_VER}.tar.gz
-    
+    rm v${BEDDER_RS_VER}.tar.gz   
 
 RUN cd bedder-rs-${BEDDER_RS_VER} && \
     echo "intersect test" && \
