@@ -51,9 +51,9 @@ FROM app AS test
 
 RUN augur --help && augur version
 
-WORKDIR /test
-
 RUN apt-get update && apt-get install -y --no-install-recommends git
+
+WORKDIR /test
 
 RUN git clone https://github.com/nextstrain/zika-tutorial && \
     cd zika-tutorial && \
