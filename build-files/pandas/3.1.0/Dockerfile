@@ -1,4 +1,4 @@
-ARG PANDAS_VER="3.0.6"
+ARG PANDAS_VER="3.1.0"
 
 FROM ubuntu:noble AS app
 
