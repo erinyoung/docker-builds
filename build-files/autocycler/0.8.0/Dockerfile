@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /usr/local/bin
 
 #  autocycler installation step
-RUN wget -q https://github.com/rrwick/Autocycler/releases/download/v${AUTOCYCLER_VER}/autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz && \
+RUN wget --progress=dot:giga https://github.com/rrwick/Autocycler/releases/download/v${AUTOCYCLER_VER}/autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz && \
     tar -vxf autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz && \
     rm autocycler-linux-x86_64-musl-v${AUTOCYCLER_VER}.tar.gz
 
@@ -40,6 +40,6 @@ RUN autocycler --help && \
     autocycler --version
 
 # demo dataset does not change with version
-RUN wget -q https://github.com/rrwick/Autocycler/releases/download/v0.1.0/autocycler-demo-dataset.tar && \
+RUN wget --progress=dot:giga https://github.com/rrwick/Autocycler/releases/download/v0.1.0/autocycler-demo-dataset.tar && \
     tar -vxf autocycler-demo-dataset.tar && \
     autocycler subsample --reads reads.fastq.gz --out_dir subsampled_reads --genome_size "242000"
