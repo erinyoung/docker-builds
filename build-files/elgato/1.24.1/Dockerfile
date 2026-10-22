@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     unzip
 
-RUN wget https://hgwdev.gi.ucsc.edu/~kent/src/isPcr${ISPCR_VER}.zip &&\
+RUN wget --progress=dot:giga https://hgwdev.gi.ucsc.edu/~kent/src/isPcr${ISPCR_VER}.zip &&\
     unzip isPcr${ISPCR_VER}.zip &&\
     cd isPcrSrc &&\
     sed -i 's/-Werror//g' inc/common.mk &&\
@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 
 # install el_gato
-RUN wget --no-check-certificate https://github.com/CDCgov/el_gato/archive/refs/tags/${ELGATO_VER}.tar.gz &&\
+RUN wget --progress=dot:giga --no-check-certificate https://github.com/CDCgov/el_gato/archive/refs/tags/${ELGATO_VER}.tar.gz &&\
     tar -xvf ${ELGATO_VER}.tar.gz && rm ${ELGATO_VER}.tar.gz &&\
     cd el_gato-${ELGATO_VER} &&\
     python3 -m pip install . --no-cache-dir &&\
@@ -68,7 +68,7 @@ FROM app AS test
 RUN apt-get update && apt-get install unzip 
 
 # download Legionella pneumophila ST62 genome
-RUN wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/900/119/765/GCF_900119765.1_2532STDY5467631/GCF_900119765.1_2532STDY5467631_genomic.fna.gz &&\
+RUN wget --progress=dot:giga https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/900/119/765/GCF_900119765.1_2532STDY5467631/GCF_900119765.1_2532STDY5467631_genomic.fna.gz &&\
     gunzip GCF_900119765.1_2532STDY5467631_genomic.fna.gz
 
 # test el_gato
@@ -77,3 +77,5 @@ RUN el_gato.py --assembly GCF_900119765.1_2532STDY5467631_genomic.fna --out test
 
 # test reporting
 RUN elgato_report.py -i test/report.json -o test/report.pdf
+
+RUN pip list
