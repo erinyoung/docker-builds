@@ -1,6 +1,6 @@
 ARG PIRANHA_VER="1.6.4"
 
-FROM mambaorg/micromamba:2.8.1-ubuntu22.04 AS app
+FROM mambaorg/micromamba:2.9.0-ubuntu22.04 AS app
 
 ARG PIRANHA_VER
 
